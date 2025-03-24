@@ -1,0 +1,62 @@
+# macOS system files
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.env
+.venv
+venv/
+ENV/
+env/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Jupyter Notebook Checkpoints (optional)
+.ipynb_checkpoints/
+
+# VSCode
+.vscode/
+
+# PyCharm
+.idea/
+
+# GCP/Service Account
+*.json
+!README.md  # Allow tracked readme
+
+# Spark/Delta/Parquet temp
+*.parquet
+*.orc
+*.avro
+*.json
+*.csv
+.delta_log/
+._*
+~$*
+
+# Logs and temp
+*.log
+*.tmp
+*.bak
+
+# Terraform (if used later)
+.terraform/
+terraform.tfstate*
+crash.log
+
+# Ignore simulator data outputs
+data/
+output/
+raw_data/
+bronze/
+silver/
+gold/
