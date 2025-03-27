@@ -7,9 +7,9 @@ This project demonstrates a real-time data pipeline for ingesting vehicle sensor
 ```
 Vehicle Energy Dataset (simulated IoT) 
       ↓
-MQTT Broker (EMQX on GCP)
+MQTT Broker (EMQX)
       ↓
-Kafka (Confluent Cloud or GKE)
+Kafka (Confluent Cloud)
       ↓
 Dataflow (Streaming ETL, watermarking)
       ↓
@@ -39,24 +39,24 @@ Looker Dashboards
 
 ## 📦 GCP Services Used
 
-| Service                | Purpose                                      |
-|------------------------|----------------------------------------------|
-| **Compute Engine / GKE** | Hosts MQTT broker (EMQX)                   |
-| **Kafka**              | Buffering and event bus (Confluent or GKE)   |
-| **Cloud Dataflow**     | Streaming ingestion + watermarking           |
-| **Cloud Storage (GCS)**| Raw data lake storage (Bronze layer)         |
-| **Cloud Functions**    | Triggers Delta ETL jobs on new file arrival  |
-| **Dataproc Serverless**| Spark jobs for Silver/Gold Delta Lake ETL    |
-| **Delta Lake**         | ACID-compliant data layers (Silver/Gold)     |
-| **Dataproc Metastore** | Schema registration and catalog              |
-| **BigQuery**           | BI-ready warehouse                           |
-| **Looker**             | Data visualization & reporting               |
+| Service                | Purpose                                  |
+|------------------------|------------------------------------------|
+| **Compute Engine / GKE** | Hosts MQTT broker (EMQX)               |
+| **Kafka**              | Buffering and event bus (Confluent)   |
+| **Cloud Dataflow**     | Streaming ingestion + watermarking       |
+| **Cloud Storage (GCS)**| Raw data lake storage (Bronze layer)     |
+| **Cloud Functions**    | Triggers Delta ETL jobs on new file arrival |
+| **Dataproc Serverless**| Spark jobs for Silver/Gold Delta Lake ETL |
+| **Delta Lake**         | ACID-compliant data layers (Silver/Gold) |
+| **Dataproc Metastore** | Schema registration and catalog          |
+| **BigQuery**           | BI-ready warehouse                       |
+| **Looker**             | Data visualization & reporting           |
 
 ## 🧪 Medallion Architecture Layers
 
 ### 🥉 Bronze Layer (Raw)
 - Data is written as-is from Kafka to GCS
-- Format: JSON or Parquet
+- Format: JSON
 - No transformations or filtering applied
 - Partitioned by `event_time`
 
@@ -87,7 +87,7 @@ Looker Dashboards
 
 - `paho-mqtt` to simulate vehicle sensor messages
 - EMQX MQTT broker
-- Apache Kafka (Confluent Cloud or GKE)
+- Apache Kafka (Confluent Cloud)
 - Apache Beam (via Cloud Dataflow)
 - Apache Spark (Dataproc Serverless)
 - Delta Lake (on GCS)
@@ -96,19 +96,16 @@ Looker Dashboards
 
 ## 🚀 How to Run
 
-1. Simulate MQTT messages from VED dataset:
+1. Run MQTT broker:
     ```bash
-    python simulate_telemetry.py --input ved_sample.csv
+    docker run -it -p 1883:1883 \
+      -v "$(pwd)/ingestion/mqtt_broker/mosquitto.conf:/mosquitto/config/mosquitto.conf" \
+      eclipse-mosquitto
     ```
-
-2. Deploy EMQX broker on GCP VM or GKE
-3. Set up Kafka with EMQX plugin
-4. Deploy Dataflow streaming job → GCS /bronze/
-5. Deploy Cloud Function trigger for new files
-6. Spark job → Delta Lake (Silver)
-7. (Optional) Spark → Gold
-8. Batch Dataflow job → BigQuery
-9. Build Looker dashboards
+2. Simulate MQTT messages from VED dataset:
+    ```bash
+    python3 ingestion/simulate_telemetry.py --input <FILE_PATH>
+    ```
 
 ## 📊 Sample KPIs in Looker
 

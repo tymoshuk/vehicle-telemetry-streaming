@@ -55,8 +55,6 @@ crash.log
 
 # Ignore simulator data outputs
 data/
+VED/
 output/
 raw_data/
-bronze/
-silver/
-gold/
