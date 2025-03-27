@@ -1,7 +1,7 @@
 import csv
 import json
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 import argparse
 import paho.mqtt.client as mqtt
 
@@ -20,12 +20,14 @@ def publish_data(input_file, broker, port, topic, interval):
 
     with open(input_file, newline='') as csvfile:
         reader = csv.DictReader(csvfile)
-        count = 0
+        base_time = datetime.utcnow()
         for row in reader:
+            relative_ms = int(row.get("Timestamp(ms)", 0))
+            absolute_time = base_time + timedelta(milliseconds=relative_ms)
             payload = {
                 "vehicle_id": f"VEH_{row.get('VehId', '0')}",
                 "trip_id": int(row.get("Trip", 0)),
-                "timestamp": datetime.utcfromtimestamp(int(row.get("Timestamp(ms)", 0)) / 1000).isoformat() + "Z",
+                "timestamp": absolute_time.isoformat() + "Z",
                 "latitude": float(row.get("Latitude[deg]", 0.0)),
                 "longitude": float(row.get("Longitude[deg]", 0.0)),
                 "speed_kph": float(row.get("Vehicle Speed[km/h]", 0.0)),

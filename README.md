@@ -5,26 +5,26 @@ This project demonstrates a real-time data pipeline for ingesting vehicle sensor
 ## 🧱 Architecture Overview
 
 ```
-Vehicle Energy Dataset (simulated IoT) 
-      ↓
-MQTT Broker (EMQX)
-      ↓
-Kafka (Confluent Cloud)
-      ↓
-Dataflow (Streaming ETL, watermarking)
-      ↓
-GCS (Bronze Layer - raw storage)
-      ↓
-Cloud Function trigger on new file
-      ↓
-Dataproc Serverless Spark (validation + transformation)
-      ↓
-Delta Lake on GCS (Silver/Gold layers, schema evolution)
-      ↓
-Dataflow (Batch)
-      ↓
-BigQuery (BI-ready analytics)
-      ↓
+Vehicle Energy Dataset (simulated IoT)  
+      ↓  
+MQTT Broker (Mosquitto)  
+      ↓  
+Pub/Sub (Buffering, decoupling layer)  
+      ↓  
+Dataflow (Streaming ETL, watermarking)  
+      ↓  
+GCS (Bronze Layer - raw storage)  
+      ↓  
+Cloud Function trigger on new file  
+      ↓  
+Dataproc Serverless Spark (validation + transformation)  
+      ↓  
+Delta Lake on GCS (Silver/Gold layers, schema evolution)  
+      ↓  
+Dataflow (Batch)  
+      ↓  
+BigQuery (BI-ready analytics)  
+      ↓  
 Looker Dashboards
 ```
 
@@ -39,23 +39,23 @@ Looker Dashboards
 
 ## 📦 GCP Services Used
 
-| Service                | Purpose                                  |
-|------------------------|------------------------------------------|
-| **Compute Engine / GKE** | Hosts MQTT broker (EMQX)               |
-| **Kafka**              | Buffering and event bus (Confluent)   |
-| **Cloud Dataflow**     | Streaming ingestion + watermarking       |
-| **Cloud Storage (GCS)**| Raw data lake storage (Bronze layer)     |
-| **Cloud Functions**    | Triggers Delta ETL jobs on new file arrival |
-| **Dataproc Serverless**| Spark jobs for Silver/Gold Delta Lake ETL |
-| **Delta Lake**         | ACID-compliant data layers (Silver/Gold) |
-| **Dataproc Metastore** | Schema registration and catalog          |
-| **BigQuery**           | BI-ready warehouse                       |
-| **Looker**             | Data visualization & reporting           |
+| Service                | Purpose                                                             |
+|------------------------|----------------------------------------------------------------------|
+| **Compute Engine**     | Hosts local MQTT broker (Mosquitto) for simulated telemetry          |
+| **Pub/Sub**            | Message buffering and decoupling between MQTT and Dataflow           |
+| **Cloud Dataflow**     | Streaming ETL with watermarking, writes raw JSON to GCS              |
+| **Cloud Storage (GCS)**| Raw data lake storage (Bronze layer)                                 |
+| **Cloud Functions**    | Automatically triggers Spark jobs upon new file arrival in GCS       |
+| **Dataproc Serverless**| Spark jobs for validation + transformation (Silver/Gold Delta Lake)  |
+| **Delta Lake on GCS**  | ACID-compliant storage with schema evolution, Medallion architecture |
+| **Dataproc Metastore** | Centralized schema registry for Delta tables                         |
+| **BigQuery**           | BI-ready warehouse layer for analytics and reporting                 |
+| **Looker**             | Dashboarding and data visualization                                  |
 
 ## 🧪 Medallion Architecture Layers
 
 ### 🥉 Bronze Layer (Raw)
-- Data is written as-is from Kafka to GCS
+- Data is written as-is from Pub/Sub to GCS
 - Format: JSON
 - No transformations or filtering applied
 - Partitioned by `event_time`
@@ -87,7 +87,7 @@ Looker Dashboards
 
 - `paho-mqtt` to simulate vehicle sensor messages
 - EMQX MQTT broker
-- Apache Kafka (Confluent Cloud)
+- Pub/Sub
 - Apache Beam (via Cloud Dataflow)
 - Apache Spark (Dataproc Serverless)
 - Delta Lake (on GCS)
@@ -101,10 +101,19 @@ Looker Dashboards
     docker run -it -p 1883:1883 \
       -v "$(pwd)/ingestion/mqtt_broker/mosquitto.conf:/mosquitto/config/mosquitto.conf" \
       eclipse-mosquitto
+
+   # Testing 
+   mosquitto_sub -h localhost -t "vehicle/telemetry"
+   mosquitto_pub -h localhost -t "vehicle/telemetry" -m "TEST DATA"
     ```
 2. Simulate MQTT messages from VED dataset:
     ```bash
     python3 ingestion/simulate_telemetry.py --input <FILE_PATH>
+    ```
+3. Run Pub/Sub ingester:
+    ```bash
+    export GOOGLE_CLOUD_PROJECT="<PROJECT_ID>"
+    python3 ingestion/pubsub_ingestor.py
     ```
 
 ## 📊 Sample KPIs in Looker
